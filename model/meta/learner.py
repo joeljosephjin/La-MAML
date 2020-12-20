@@ -3,7 +3,7 @@ import os
 import sys
 import traceback
 import numpy as np
-import ipdb
+# import ipdb
 
 import torch
 from torch import nn
@@ -255,7 +255,7 @@ class Learner(nn.Module):
 
         except:
             traceback.print_exc(file=sys.stdout)
-            ipdb.set_trace()
+            # ipdb.set_trace()
 
         # make sure variable is used properly
         assert idx == len(vars)

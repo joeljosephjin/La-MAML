@@ -1,7 +1,7 @@
 import random
 from random import shuffle
 import numpy as np
-import ipdb
+# import ipdb
 import math
 
 import torch
@@ -304,7 +304,8 @@ class Net(torch.nn.Module):
                 self.optimizer.zero_grad()                                                                   
                 meta_loss = sum(meta_losses)/len(meta_losses)
                 if torch.isnan(meta_loss):
-                    ipdb.set_trace()
+                    pass
+                    # ipdb.set_trace()
                 meta_loss.backward()
                 torch.nn.utils.clip_grad_norm_(self.net.parameters(), self.args.grad_clip_norm)
                 mc_meta_losses[pass_itr] = meta_loss

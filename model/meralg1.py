@@ -17,7 +17,7 @@ import random
 from torch.nn.modules.loss import CrossEntropyLoss
 from random import shuffle
 import sys
-import ipdb
+# import ipdb
 from copy import deepcopy
 import warnings
 import model.meta.learner as Learner
@@ -144,7 +144,8 @@ class Net(nn.Module):
                 weights_before = deepcopy(self.net.state_dict())
                 ##Check for nan
                 if weights_before != weights_before:
-                    ipdb.set_trace()
+                    pass
+                    # ipdb.set_trace()
                 # Draw batch from buffer:
                 bxs, bys, bts = self.getBatch(xi,yi,t)          
                 loss = 0.0
@@ -165,7 +166,8 @@ class Net(nn.Module):
                         prediction = self.forward(bx,0)
                         loss = self.bce(prediction, by.unsqueeze(0))
                     if torch.isnan(loss):
-                        ipdb.set_trace()
+                        pass
+                        # ipdb.set_trace()
 
                     loss.backward()
                     torch.nn.utils.clip_grad_norm_(self.net.parameters(), self.args.grad_clip_norm)
@@ -173,7 +175,8 @@ class Net(nn.Module):
                     total_loss += loss.item()
                 weights_after = self.net.state_dict()
                 if weights_after != weights_after:
-                    ipdb.set_trace()
+                    pass
+                    # ipdb.set_trace()
 
                 # Within batch Reptile meta-update:
                 self.net.load_state_dict({name : weights_before[name] + ((weights_after[name] - weights_before[name]) * self.beta) for name in weights_before})

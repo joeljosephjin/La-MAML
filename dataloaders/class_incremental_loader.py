@@ -29,7 +29,9 @@ class IncrementalLoader:
         validation_split=opt.validation
         self.increment=opt.increment
 
+        # this is where the dataset is really loaded from the file i guess
         datasets = _get_datasets(dataset_name)
+        
         self._setup_data(
             datasets,
             class_order_type=opt.class_order,

@@ -4,7 +4,7 @@ ROT="--n_layers 2 --n_hiddens 100 --data_path data/ --log_every 100 --samples_pe
 PERM="--n_layers 2 --n_hiddens 100 --data_path data/ --log_every 100 --samples_per_task 1000 --dataset mnist_permutations --cuda --log_dir logs/"
 MANY="--n_layers 2 --n_hiddens 100 --data_path data/ --log_every 100 --samples_per_task 200 --dataset mnist_manypermutations --cuda --log_dir logs/"
 CIFAR='--data_path data/ --log_every 100 --dataset cifar100 --cuda --log_dir logs/'
-IMGNET='--data_path data/tiny-imagenet-200/ --log_every 100 --dataset tinyimagenet --cuda --log_dir logs/'
+IMGNET='--data_path data/tiny-imagenet-200/ --log_every 100 --dataset tinyimagenet --log_dir logs/'
 SEED=0
 
 ##### La-MAML #####

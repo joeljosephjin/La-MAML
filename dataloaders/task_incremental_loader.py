@@ -108,8 +108,9 @@ class IncrementalLoader:
         # FIXME: handles online loading of images
         torch.manual_seed(seed)
 
+        print('been here', self._opt.data_path, self._opt.dataset + ".pt")
         self.train_dataset, self.test_dataset = torch.load(os.path.join(self._opt.data_path, self._opt.dataset + ".pt"))
-
+        print('passed here')
         self.sample_permutations = []
 
         # for every task, accumulate a shuffled set of samples_per_task

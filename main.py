@@ -3,58 +3,72 @@ import datetime
 import argparse
 import time
 import os
-import ipdb
+# import ipdb
 from tqdm import tqdm
 
 import torch
 from torch.autograd import Variable
-
 import parser as file_parser
 from metrics.metrics import confusion_matrix
 from utils import misc_utils
 from main_multi_task import life_experience_iid, eval_iid_tasks
 
-def eval_class_tasks(model, tasks, args):
+# eval_class_tasks(model, tasks, args) : returns lists of avg losses after passing thru model
+# eval_tasks(model, tasks, args) : ''''''''''''''''''''''''''''''''''''''''''''''''''''''''''
+# life_experience(model, inc_loader, args) : 
+# save_results(......) : 
 
+# def main():
+# if __name__=...
+
+# returns list of avg loss of each task
+def eval_class_tasks(model, tasks, args):
+    # model.eval turns off dropouts, batchnorms. https://stackoverflow.com/questions/60018578/what-does-model-eval-do-in-pytorch
     model.eval()
     result = []
+    # for {0,1,2..} and task_loader? from tasks
     for t, task_loader in enumerate(tasks):
         rt = 0
-
-        for (i, (x, y)) in enumerate(task_loader):
-            if args.cuda:
-                x = x.cuda()
+        # for 
+        for x, y in task_loader:
+            # cuda-ize x if necessary
+            if args.cuda: x = x.cuda()
+            # push x thru model and get p out
             _, p = torch.max(model(x, t).data.cpu(), 1, keepdim=False)
+            # rt is the loss/error . its being compared with label y
             rt += (p == y).float().sum()
-
+        # append average loss into result list
         result.append(rt / len(task_loader.dataset))
     return result
 
+# returns lists of avg loss
 def eval_tasks(model, tasks, args):
-
+    # prep for eval
     model.eval()
     result = []
+    # for each task
     for i, task in enumerate(tasks):
+
         t = i
-        x = task[1]
-        y = task[2]
+        x, y = task[1], task[2]
         rt = 0
         
         eval_bs = x.size(0)
 
         for b_from in range(0, x.size(0), eval_bs):
             b_to = min(b_from + eval_bs, x.size(0) - 1)
-            if b_from == b_to:
-                xb = x[b_from].view(1, -1)
-                yb = torch.LongTensor([y[b_to]]).view(1, -1)
-            else:
-                xb = x[b_from:b_to]
-                yb = y[b_from:b_to]
-            if args.cuda:
-                xb = xb.cuda()
-            _, pb = torch.max(model(xb, t).data.cpu(), 1, keepdim=False)
-            rt += (pb == yb).float().sum()
 
+            if b_from == b_to: 
+                xb, yb = x[b_from].view(1, -1), torch.LongTensor([y[b_to]]).view(1, -1)
+            else: 
+                xb, yb = x[b_from:b_to], y[b_from:b_to]
+
+            # cuda-ize xb if necessary
+            if args.cuda: xb = xb.cuda()
+            _, pb = torch.max(model(xb, t).data.cpu(), 1, keepdim=False)
+            # adding the loss each time to rt
+            rt += (pb == yb).float().sum()
+        # average loss of each task added to result list
         result.append(rt / x.size(0))
 
     return result
@@ -148,8 +162,10 @@ def save_results(args, result_val_t, result_val_a, result_test_t, result_test_a,
     return val_stats, test_stats
 
 def main():
+    # loads a lot of default parser values from the 'parser' file
     parser = file_parser.get_parser()
 
+    # get args from parser as an object
     args = parser.parse_args()
 
     # initialize seeds
@@ -159,21 +175,26 @@ def main():
     # 2 options: class_incremental and task_incremental
     # experiments in the paper only use task_incremental
     Loader = importlib.import_module('dataloaders.' + args.loader)
+    
+    # args.loader='task_incremental_loader'
+    # print('loader stuff', args)
     loader = Loader.IncrementalLoader(args, seed=args.seed)
+    # print('loader stuff after after', args)
     n_inputs, n_outputs, n_tasks = loader.get_dataset_info()
 
     # setup logging
-    timestamp = misc_utils.get_date_time()
-    args.log_dir, args.tf_dir = misc_utils.log_dir(args, timestamp)
+    # logging is from 'misc_utils.py' from 'utils' folder
+    timestamp = misc_utils.get_date_time() # this line is redundant bcz log_dir already takes care of it
+    args.log_dir, args.tf_dir = misc_utils.log_dir(args, timestamp) # stores args into "training_parameters.json"
 
-    # load model
+    # load model from the 'model' folder
     Model = importlib.import_module('model.' + args.model)
+    # create the model neural net
     model = Model.Net(n_inputs, n_outputs, n_tasks, args)
+    # make model cuda-ized if possible
     if args.cuda:
-        try:
-            model.net.cuda()            
-        except:
-            pass 
+        try: model.net.cuda()            
+        except: pass 
 
     # run model on loader
     if args.model == "iid2":

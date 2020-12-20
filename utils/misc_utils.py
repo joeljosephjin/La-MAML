@@ -3,7 +3,7 @@ import glob
 import json
 import os
 import random
-import ipdb
+# import ipdb
 import numpy as np
 import torch
 from tqdm import tqdm
@@ -44,7 +44,7 @@ def get_date():
 def get_date_time():
     return datetime.datetime.now().strftime('%Y-%m-%d_%H-%M-%S-%f')[:-2]
 
-
+# log_dir(args, timestamp)
 def log_dir(opt, timestamp=None):
     if timestamp is None:
         timestamp = get_date_time()

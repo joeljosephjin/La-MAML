@@ -1,7 +1,7 @@
 import random
 from random import shuffle
 import numpy as np
-import ipdb
+# import ipdb
 import math
 import torch
 from torch.autograd import Variable
@@ -84,52 +84,53 @@ class BaseNet(torch.nn.Module):
         Given the new data points, create a batch of old + new data, 
         where old data is sampled from the memory buffer
         """
+        # numpy-ize the data{x,y,t}
+        if x: mxi, myi, mti = np.array(x),              np.array(y),              np.ones(x.shape[0], dtype=int)*t
+        # if no data, then create empty numpy array
+        else: mxi, myi, mti = np.empty( shape=(0, 0) ), np.empty( shape=(0, 0) ), np.empty( shape=(0, 0) )
 
-        if(x is not None):
-            mxi = np.array(x)
-            myi = np.array(y)
-            mti = np.ones(x.shape[0], dtype=int)*t        
-        else:
-            mxi = np.empty( shape=(0, 0) )
-            myi = np.empty( shape=(0, 0) )
-            mti = np.empty( shape=(0, 0) )    
+        # might store the data into lists
+        bxs, bys, bts = [], [], []
 
-        bxs = []
-        bys = []
-        bts = []
+        # use from old memory or new memory
+        if self.args.use_old_task_memory and t>0: MEM = self.M
+        else: MEM = self.M_new
 
-        if self.args.use_old_task_memory and t>0:
-            MEM = self.M
-        else:
-            MEM = self.M_new
-
+        # use self.batch_size if necessary
         batch_size = self.batchSize if batch_size is None else batch_size
 
+        # if there is anything in memory
         if len(MEM) > 0:
-            order = [i for i in range(0,len(MEM))]
+            # order = {0,1,2...,len(MEM)-1}
+            order = [i for i in range(len(MEM))]
+            # run the loop until minm MEM or batch_siz
             osize = min(batch_size,len(MEM))
-            for j in range(0,osize):
+            for j in range(osize):
+                # randomly shuffle the order list
                 shuffle(order)
-                k = order[j]
-                x,y,t = MEM[k]
+                # get random tuples of {x,y,t}
+                x,y,t = MEM[order[j]]
+                
+                # numpy-ize the data tuple
+                xi, yi, ti = np.array(x), np.array(y), np.array(t)
 
-                xi = np.array(x)
-                yi = np.array(y)
-                ti = np.array(t)
+                # store the data tuple into the lists
                 bxs.append(xi)
                 bys.append(yi)
                 bts.append(ti)
 
+        # b_lists <= add_to <= m_lists
         for j in range(len(myi)):
             bxs.append(mxi[j])
             bys.append(myi[j])
             bts.append(mti[j])
 
+        # b_lists <= torch-ize
         bxs = Variable(torch.from_numpy(np.array(bxs))).float() 
         bys = Variable(torch.from_numpy(np.array(bys))).long().view(-1)
         bts = Variable(torch.from_numpy(np.array(bts))).long().view(-1)
         
-        # handle gpus if specified
+        # b_lists <= cuda-ize
         if self.cuda:
             bxs = bxs.cuda()
             bys = bys.cuda()
@@ -144,8 +145,7 @@ class BaseNet(torch.nn.Module):
         return int(offset1), int(offset2)
 
     def zero_grads(self):
-        if self.args.learn_lr:
-            self.opt_lr.zero_grad()
+        if self.args.learn_lr: self.opt_lr.zero_grad()
         self.opt_wt.zero_grad()
         self.net.zero_grad()
         self.net.alpha_lr.zero_grad()

@@ -85,7 +85,7 @@ class BaseNet(torch.nn.Module):
         where old data is sampled from the memory buffer
         """
         # numpy-ize the data{x,y,t}
-        if x: mxi, myi, mti = np.array(x),              np.array(y),              np.ones(x.shape[0], dtype=int)*t
+        if x is not None: mxi, myi, mti = np.array(x),              np.array(y),              np.ones(x.shape[0], dtype=int)*t
         # if no data, then create empty numpy array
         else: mxi, myi, mti = np.empty( shape=(0, 0) ), np.empty( shape=(0, 0) ), np.empty( shape=(0, 0) )
 

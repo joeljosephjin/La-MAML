@@ -10,7 +10,9 @@ if sys.version_info[0] == 2:
 else:
     import pickle
 
+# they taking cifar10 from url or pytorch ??
 from torchvision.datasets.vision import VisionDataset
+# 
 from torchvision.datasets.utils import check_integrity, download_and_extract_archive
 # import ipdb
 
@@ -57,10 +59,15 @@ class CIFAR10(VisionDataset):
             downloaded again.
 
     """
+    # what is this good for?
     base_folder = 'cifar-10-batches-py'
+    # how many places has this been pasted??
     url = "https://www.cs.toronto.edu/~kriz/cifar-10-python.tar.gz"
+    # same garbage lots
     filename = "cifar-10-python.tar.gz"
+    # garbage no.s
     tgz_md5 = 'c58f30108f718f92721af3b95e74349a'
+    # list of garbage no.s {data_batch_<no.>:'78sadfasyd9asy7d9'}
     train_list = [
         ['data_batch_1', 'c99cafc152244af753f735de768cd75f'],
         ['data_batch_2', 'd4bba439e000b95fd0a9bffe97cbabec'],
@@ -69,15 +76,18 @@ class CIFAR10(VisionDataset):
         ['data_batch_5', '482c414d41f54cd18b22e5b47cb7c3cb'],
     ]
 
+    # list of 1 garbage no.
     test_list = [
         ['test_batch', '40351d587109b95175f43aff81a1287e'],
     ]
+    # garbage
     meta = {
         'filename': 'batches.meta',
         'key': 'label_names',
         'md5': '5ff9c542aee3614f3951f8cda6e48888',
     }
 
+    # root=root directory, train=what else?, transform, target_transform, download
     def __init__(self, root, train=True, transform=None, target_transform=None,
                  download=False):
 
@@ -86,18 +96,19 @@ class CIFAR10(VisionDataset):
 
         self.train = train  # training set or test set
 
-        if download:
-            self.download()
+        # use the download function if necessary
+        if download: self.download()
 
+        # __check_integrity stores {no error or what} 
         if not self._check_integrity():
             raise RuntimeError('Dataset not found or corrupted.' +
                                ' You can use download=True to download it')
 
-        if self.train:
-            downloaded_list = self.train_list
-        else:
-            downloaded_list = self.test_list
+        # downloaded_list will contain train or test accordingly
+        if self.train: downloaded_list = self.train_list
+        else: downloaded_list = self.test_list
 
+        # {data, targets, super_targets} and high_lvl_supervision
         self.high_level_supervise = True
         self.data = []
         self.targets = []
@@ -105,22 +116,25 @@ class CIFAR10(VisionDataset):
 
         # now load the picked numpy arrays
         for file_name, checksum in downloaded_list:
+            # load the filename
             file_path = os.path.join(self.root, self.base_folder, file_name)
+            # open the file
             with open(file_path, 'rb') as f:
-                if sys.version_info[0] == 2:
-                    entry = pickle.load(f)
-                else:
-                    entry = pickle.load(f, encoding='latin1')
+                # pickle(load in dict format) according to system version
+                if sys.version_info[0] == 2: entry = pickle.load(f)
+                else: entry = pickle.load(f, encoding='latin1')
+
+                # put data in self.data
                 self.data.append(entry['data'])
 
-                if 'labels' in entry:
-                    self.targets.extend(entry['labels'])
-                else:
-                    self.targets.extend(entry['fine_labels'])             
+                # put labels/fine_labels in self.targets
+                if 'labels' in entry: self.targets.extend(entry['labels'])
+                else: self.targets.extend(entry['fine_labels'])             
 
+                # put coarse_labels in self.super_targets
                 self.super_targets.extend(entry['coarse_labels'])           
 
-
+        # 
         self.data = np.vstack(self.data).reshape(-1, 3, 32, 32)
         self.data = self.data.transpose((0, 2, 3, 1))  # convert to HWC
     
@@ -210,23 +224,29 @@ class CIFAR10(VisionDataset):
         return "Split: {}".format("Train" if self.train is True else "Test")
 
 
-
+# why this even required??
 class CIFAR100(CIFAR10):
     """`CIFAR100 <https://www.cs.toronto.edu/~kriz/cifar.html>`_ Dataset.
 
     This is a subclass of the `CIFAR10` Dataset.
     """
+    # does this folder exist in my pc??
     base_folder = 'cifar-100-python'
+    # this is the famous cifar url
     url = "https://www.cs.toronto.edu/~kriz/cifar-100-python.tar.gz"
+    # obvious
     filename = "cifar-100-python.tar.gz"
+    # garbage
     tgz_md5 = 'eb9058c3a382ffc7106e4002c42a8d85'
+    # god knows what??
     train_list = [
         ['train', '16019d7e3df5f24257cddd939b257f8d'],
     ]
-
+    # god knows what 2??
     test_list = [
         ['test', 'f0ef6b0ae62326f3e7ffdfab6717acfc'],
     ]
+    # why all this garbage can info??
     meta = {
         'filename': 'meta',
         'key': 'fine_label_names',

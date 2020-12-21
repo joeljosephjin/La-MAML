@@ -7,6 +7,7 @@ from torch.utils.data import DataLoader
 from torch.utils.data.sampler import SubsetRandomSampler
 from torchvision import datasets, transforms
 
+# the _get_datasets deals with getting the thing from the file i guess
 from dataloaders.idataset import _get_datasets, DummyDataset
 
 import random

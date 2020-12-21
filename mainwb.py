@@ -15,7 +15,7 @@ from main_multi_task import life_experience_iid, eval_iid_tasks
 
 
 import wandb
-wandb.init(project="rc2020", entity="teamname")
+wandb.init(project="rc2020", entity="joeljosephjin")
 
 
 # eval_class_tasks(model, tasks, args) : returns lists of avg losses after passing thru model

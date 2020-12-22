@@ -95,6 +95,7 @@ def life_experience(model, inc_loader, args):
         evaluator = eval_class_tasks
 
     # for no. of tasks
+    # print(inc_loader.n_tasks)
     for task_i in range(inc_loader.n_tasks):
         # initialize new task
         task_info, train_loader, _, _ = inc_loader.new_task()

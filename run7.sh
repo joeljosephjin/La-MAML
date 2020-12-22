@@ -1,4 +1,5 @@
 IMGNET='--data_path data/tiny-imagenet-200/ --log_every 100 --dataset tinyimagenet --cuda --log_dir logs/'
+# IMGNET='--data_path data/tiny-imagenet-200/ --log_every 100 --dataset tinyimagenet --log_dir logs/'  # no cuda for debugging
 
 SEED=0
 

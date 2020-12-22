@@ -104,7 +104,8 @@ def life_experience(model, inc_loader, args):
 
             model.real_epoch = ep
 
-            prog_bar = tqdm(train_loader)
+            # prog_bar = tqdm(train_loader)
+            prog_bar = train_loader
             # for each data tuple {x,y}
             for (i, (x, y)) in enumerate(prog_bar):
 

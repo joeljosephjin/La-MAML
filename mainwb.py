@@ -12,7 +12,7 @@ import parser as file_parser
 from metrics.metrics import confusion_matrix
 from utils import misc_utils
 from main_multi_task import life_experience_iid, eval_iid_tasks
-
+import wandb
 
 # eval_class_tasks(model, tasks, args) : returns lists of avg losses after passing thru model
 # eval_tasks(model, tasks, args) : ''''''''''''''''''''''''''''''''''''''''''''''''''''''''''
@@ -76,7 +76,6 @@ def eval_tasks(model, tasks, args):
 
 # for lamaml and everything except iid
 def life_experience(model, inc_loader, args):
-    import wandb
     wandb.init(project="rc2020", entity="joeljosephjin")
 
     result_val_a = []

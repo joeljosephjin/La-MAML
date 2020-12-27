@@ -23,7 +23,7 @@ def eval_iid_tasks(model, tasks, args):
 
 def life_experience_iid(model, inc_loader, args):
     import wandb
-    
+
     wandb.init(project="rc2020", entity="joeljosephjin")
 
     result_val_a = []
@@ -42,7 +42,8 @@ def life_experience_iid(model, inc_loader, args):
 
         model.real_epoch = ep
 
-        prog_bar = tqdm(train_loader)
+        # prog_bar = tqdm(train_loader)
+        prog_bar = train_loader
         for (i, (x, y, super_y)) in enumerate(prog_bar):
             if((i % args.log_every) == 0):
                 result_val_a.append(evaluator(model, val_tasks, args))

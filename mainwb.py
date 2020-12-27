@@ -214,7 +214,7 @@ def main():
         try: model.net.cuda()            
         except: pass 
 
-    wandb.watch(model)
+    # wandb.watch(model)
 
     # run model on loader
     if args.model == "iid2":

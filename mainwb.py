@@ -110,7 +110,7 @@ def life_experience(model, inc_loader, args):
             for (i, (x, y)) in enumerate(prog_bar):
 
                 if((i % args.log_every) == 0):
-                    # get accuracy by evaluating on another dataset ??
+                    # get accuracy by evaluating on validation data ??
                     result_val_a.append(evaluator(model, val_tasks, args))
                     result_val_t.append(task_info["task"])
 

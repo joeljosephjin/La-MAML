@@ -22,6 +22,9 @@ def eval_iid_tasks(model, tasks, args):
     return result
 
 def life_experience_iid(model, inc_loader, args):
+    import wandb
+    wandb.init(project="rc2020", entity="joeljosephjin")
+
     result_val_a = []
     result_test_a = []
 
@@ -59,12 +62,17 @@ def life_experience_iid(model, inc_loader, args):
 
             loss = model.observe(Variable(v_x), Variable(v_y), Variable(super_v_y))
 
-            prog_bar.set_description(
-                "Epoch: {}/{} | Iter: {} | Loss: {} | Acc: Total: {}".format(
-                    ep+1, args.n_epochs, i%(1000*args.n_epochs), round(loss, 3),
-                    round(sum(result_val_a[-1]).item()/len(result_val_a[-1]), 5)
-                )
-            )
+            wandb.log({"Task": task_info["task"], "Epoch": ep+1/args.n_epochs, "Iter": i%(1000*args.n_epochs),
+                 "Loss": round(loss, 3),
+                 "Total Acc": round(sum(result_val_a[-1]).item()/len(result_val_a[-1]), 5),
+                  "Curr Task Acc": round(result_val_a[-1][task_info["task"]].item(), 5)})
+
+            # prog_bar.set_description(
+            #     "Epoch: {}/{} | Iter: {} | Loss: {} | Acc: Total: {}".format(
+            #         ep+1, args.n_epochs, i%(1000*args.n_epochs), round(loss, 3),
+            #         round(sum(result_val_a[-1]).item()/len(result_val_a[-1]), 5)
+            #     )
+            # )
 
     result_val_a.append(evaluator(model, val_tasks, args))
     result_val_t.append(task_info["task"])

@@ -12,7 +12,7 @@ pip install --upgrade wandb
 
 pip install ipdb
 
-conda install matplotlib numpy pillow torchvision urllib3 scipy --yes # terminal
+conda install matplotlib numpy pillow urllib3 scipy --yes # terminal
 
 # conda update -n base -c defaults conda --yes #terminal
 

@@ -6,7 +6,7 @@ apt-get install python3-pip # terminal
 
 # conda create -n env python=3.9.1 --yes
 
-conda activate env --yes
+conda activate env
 
 pip install --upgrade wandb
 
@@ -14,7 +14,7 @@ pip install ipdb
 
 conda install matplotlib numpy pillow torchvision urllib3 scipy --yes # terminal
 
-conda update -n base -c defaults conda --yes #terminal
+# conda update -n base -c defaults conda --yes #terminal
 
 conda install pytorch torchvision torchaudio cudatoolkit=10.2 -c pytorch --yes # terminal
 

@@ -4,7 +4,7 @@ import argparse
 import time
 import os
 # import ipdb
-from tqdm import tqdm
+# from tqdm import tqdm
 
 import torch
 from torch.autograd import Variable

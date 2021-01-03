@@ -4,7 +4,7 @@ apt-get install wget
 
 apt-get install python3-pip # terminal
 
-conda create -n env python=3.9.1 --yes
+# conda create -n env python=3.9.1 --yes
 
 conda activate env --yes
 

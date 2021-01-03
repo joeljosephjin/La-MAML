@@ -2,6 +2,12 @@ apt-get update
 
 apt-get install wget
 
+chmod +x download_tinyimgnet.sh
+./download_tinyimgnet.sh
+
+mkdir data
+mv tiny-imagenet-200 data/tiny-imagenet-200
+
 apt-get install python3-pip # terminal
 
 conda create -n env python=3.9.1 --yes

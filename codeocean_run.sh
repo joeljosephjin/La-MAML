@@ -4,7 +4,13 @@ apt-get install wget
 
 apt-get install python3-pip # terminal
 
-pip3 install ipdb
+conda create -n env python=3.9.1 --yes
+
+conda activate env --yes
+
+pip install --upgrade wandb
+
+pip install ipdb
 
 conda install matplotlib numpy pillow torchvision urllib3 scipy --yes # terminal
 

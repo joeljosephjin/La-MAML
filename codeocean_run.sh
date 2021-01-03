@@ -24,5 +24,14 @@ conda install pytorch torchvision torchaudio cudatoolkit=10.2 -c pytorch --yes #
 
 wandb login 665a5d573c302c27f7dab355484da17a460e6759
 
-chmod +x run_many.sh
-./run_many.sh
+# chmod +x run_many.sh
+# ./run_many.sh
+
+CIFAR='--data_path data/ --log_every 100 --dataset cifar100 --cuda --log_dir logs/'
+SEED=0
+
+##### ER ##### CIFAR DATASET Multi-Pass 
+python3 mainwb.py $CIFAR --model eralg4 --expt_name eralg4 --memories 200 --batch_size 10 --replay_batch_size 1 --n_epochs 10 \
+                     --lr 0.03 --glances 1 --loader class_incremental_loader  --increment 5 \
+                    --arch "pc_cnn" --log_every 3125 --class_order random \
+                    --seed $SEED --calc_test_accuracy --validation 0.1

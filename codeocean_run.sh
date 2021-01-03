@@ -12,11 +12,11 @@ conda update -n base -c defaults conda --yes #terminal
 
 conda install pytorch torchvision torchaudio cudatoolkit=10.2 -c pytorch --yes # terminal
 
-cd La-MAML
+# cd La-MAML
 
 git pull https://github.com/joeljosephjin/La-MAML
 
-pip3 install wandb
+conda install -c conda-forge wandb --yes
 
 wandb login 665a5d573c302c27f7dab355484da17a460e6759
 

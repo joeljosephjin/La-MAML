@@ -164,6 +164,7 @@ def save_results(args, result_val_t, result_val_a, result_test_t, result_test_a,
     # save confusion matrix and print one line of stats
     val_stats = confusion_matrix(result_val_t, result_val_a, args.log_dir, 'results.txt')
 
+    wandb.log({"result_val_t":result_val_t, "result_val_a":result_val_a, "result_test_t":result_test_t, "result_test_a":result_test_a})
     wandb.save(fname+'.txt')
     
     one_liner = str(vars(args)) + ' # val: '

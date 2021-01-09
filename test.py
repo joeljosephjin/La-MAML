@@ -1,3 +1,29 @@
-x = [0.4760 ,  0.6280 ,  0.6280 ,  0.4640 ,  0.5720 ,  0.5360 ,  0.6680 ,  0.5720 ,  0.5920 ,  0.5080 ,  0.5760 ,  0.6880 ,  0.7160 ,  0.5680 ,  0.6680 ,  0.6800 ,  0.6720 ,  0.6000 ,  0.5720 ,  0.6520 ,  0.6280 ,  0.5960 ,  0.7040 ,  0.5880 ,  0.5680 ,  0.6120 ,  0.7720 ,  0.6360 ,  0.7280 ,  0.6600 ,  0.6160 ,  0.7080 ,  0.7400 ,  0.5840 ,  0.6720 ,  0.6840 ,  0.6320 ,  0.7720 ,  0.7320 ,  0.8360 ]
+##### ER ##### CIFAR DATASET Multi-Pass 
+python3 mainwb.py $CIFAR --model eralg4 --expt_name eralg4 --memories 200 --batch_size 10 --replay_batch_size 1 --n_epochs 10 \
+                     --lr 0.03 --glances 1 --loader class_incremental_loader  --increment 5 \
+                    --arch "pc_cnn" --log_every 3125 --class_order random \
+                    --seed $SEED --calc_test_accuracy --validation 0.1
 
-print()
+DIFF: n_epochs, glances
+
+##### ER #####  CIFAR DATASET Single-Pass
+python3 mainwb.py $CIFAR --model eralg4 --expt_name eralg4 --memories 200 --batch_size 10 --replay_batch_size 1 --n_epochs 1 \
+                     --lr 0.03 --glances 10 --loader class_incremental_loader  --increment 5 \
+                    --arch "pc_cnn" --log_every 3125 --class_order random \
+                    --seed $SEED --calc_test_accuracy --validation 0.1
+
+
+
+##### La-MAML ##### TinyImageNet Dataset Multi-Pass
+python3 mainwb.py $IMGNET --model lamaml_cifar --expt_name lamaml --memories 400 --batch_size 10 --replay_batch_size 10 --n_epochs 10 \
+                    --opt_lr 0.4 --alpha_init 0.1 --opt_wt 0.1 --glances 1 --loader class_incremental_loader --increment 5 \
+                    --arch "pc_cnn" --cifar_batches 5 --learn_lr --log_every 3125 --second_order --class_order random \
+                    --seed $SEED --grad_clip_norm 1.0 --calc_test_accuracy --validation 0.1
+
+DIFF: n_epochs, glances, 
+
+##### La-MAML ##### TinyImageNet Dataset Single-Pass
+python3 mainwb.py $IMGNET --model lamaml_cifar --expt_name lamaml --memories 400 --batch_size 10 --replay_batch_size 10 --n_epochs 1 \
+                    --opt_lr 0.4 --alpha_init 0.1 --opt_wt 0.1 --glances 2 --loader class_incremental_loader --increment 5 \
+                    --arch "pc_cnn" --cifar_batches 5 --learn_lr --log_every 3125 --second_order --class_order random \
+                    --seed $SEED --grad_clip_norm 1.0 --calc_test_accuracy --validation 0.1

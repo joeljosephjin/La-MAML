@@ -132,7 +132,7 @@ class Net(BaseNet):
 
             # update theta learning rate
             if(self.args.sync_update): self.opt_wt.step()
-            else: 
+            else:
                 # update the parameters in place
                 for i,p in enumerate(self.net.parameters()):
                     p.data = p.data - p.grad * nn.functional.relu(self.net.alpha_lr[i])

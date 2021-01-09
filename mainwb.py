@@ -172,6 +172,8 @@ def save_results(args, result_val_t, result_val_a, result_test_t, result_test_a,
         test_stats = confusion_matrix(result_test_t, result_test_a, args.log_dir, 'results.txt')
         one_liner += ' # test: ' +  ' '.join(["%.3f" % stat for stat in test_stats])
 
+    wandb.save(fname)
+
     print(fname + ': ' + one_liner + ' # ' + str(spent_time))
 
     # save all results in binary file

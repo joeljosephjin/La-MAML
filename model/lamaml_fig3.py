@@ -7,26 +7,6 @@ import torch.nn as nn
 from model.lamaml_base import *
 
 
-# returns list of avg loss of each task
-def eval_class_tasks(model, tasks, args):
-    model.eval()
-    result = []
-    # for {0,1,2..} and task_loader? from tasks
-    for t, task_loader in enumerate(tasks):
-        rt = 0
-        # for 
-        for x, y in task_loader:
-            # cuda-ize x if necessary
-            if args.cuda: x = x.cuda()
-            # push x thru model and get p out
-            _, p = torch.max(model(x, t).data.cpu(), 1, keepdim=False)
-            # rt is the loss/error . its being compared with label y
-            rt += (p == y).float().sum()
-        # append average loss into result list
-        result.append(rt / len(task_loader.dataset))
-    return result
-
-
 class Net(BaseNet):
 
     def __init__(self,
@@ -61,6 +41,29 @@ class Net(BaseNet):
             offset1, offset2 = self.compute_offsets(ti)
             loss += self.loss(logits[i, offset1:offset2].unsqueeze(0), y[i].unsqueeze(0)-offset1)
         return loss/len(bt)
+
+
+    # returns list of avg loss of each task
+    def eval_class_tasks(self, model, tasks, args, fast_weights):
+        model.eval()
+        result = []
+        # for {0,1,2..} and task_loader? from tasks
+        for t, task_loader in enumerate(tasks):
+            rt = 0
+            # for 
+            for x, y in task_loader:
+                # cuda-ize x if necessary
+                if args.cuda: x = x.cuda()
+
+                offset1, offset2 = self.compute_offsets(t)
+
+                # push x thru model and get p out
+                _, p = torch.max(self.net.forward(x, fast_weights)[:, :offset2].data.cpu(), 1, keepdim=False)
+                # rt is the loss/error . its being compared with label y
+                rt += (p == y).float().sum()
+            # append average loss into result list
+            result.append(rt / len(task_loader.dataset))
+        return result
 
 
     def forward(self, x, t):
@@ -116,12 +119,6 @@ class Net(BaseNet):
 
         for pass_itr in range(self.glances):
 
-            # calculate RA here every 25th time
-            if (itr_main*self.glances + pass_itr) % 25 == 0:
-                outer_acc = eval_class_tasks(model, val_tasks, self.args)
-                # print("RA before meta-update",sum(outer_acc)/len(outer_acc))
-                model.train()
-
             self.pass_itr = pass_itr
             perm = torch.randperm(x.size(0))
             x = x[perm]
@@ -160,15 +157,11 @@ class Net(BaseNet):
 
                 # calc RA here if pass_itr is multiple of 25
                 if (itr_main*self.glances + pass_itr) % 25 == 0:
-                    inner_eval_acc = eval_class_tasks(model, val_tasks, self.args)
+                    inner_eval_acc = self.eval_class_tasks(model, val_tasks, self.args, fast_weights)
                     inner_upd_ra.append(sum(inner_eval_acc)/len(inner_eval_acc))
-                    model.train()
                 
                 meta_losses[i] += meta_loss
 
-            if (itr_main*self.glances + pass_itr) % 25 == 0:
-                # print("inner update ras", inner_upd_ra)
-                self.all_ras.append([outer_acc, inner_upd_ra])
             # Taking the meta gradient step (will update the learning rates)
             self.zero_grads()
 
@@ -190,6 +183,13 @@ class Net(BaseNet):
                     p.data = p.data - p.grad * nn.functional.relu(self.net.alpha_lr[i])            
             self.net.zero_grad()
             self.net.alpha_lr.zero_grad()
+
+            # calculate RA here every 25th time
+            if (itr_main*self.glances + pass_itr) % 25 == 0:
+                outer_acc = self.eval_class_tasks(model, val_tasks, self.args, fast_weights)
+                outer_acc = sum(outer_acc)/len(outer_acc)
+                self.all_ras.append([outer_acc, inner_upd_ra])
+                print('ras', [outer_acc, inner_upd_ra])
 
 
         return meta_loss.item()

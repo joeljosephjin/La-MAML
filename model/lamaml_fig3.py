@@ -58,7 +58,11 @@ class Net(BaseNet):
                 offset1, offset2 = self.compute_offsets(t)
 
                 # push x thru model and get p out
-                _, p = torch.max(self.net.forward(x, fast_weights)[:, :offset2].data.cpu(), 1, keepdim=False)
+                if not fast_weights:
+                    _, p = torch.max(model(x, t).data.cpu(), 1, keepdim=False)
+                    pass
+                else:
+                    _, p = torch.max(self.net.forward(x, fast_weights)[:, :offset2].data.cpu(), 1, keepdim=False)
                 # rt is the loss/error . its being compared with label y
                 rt += (p == y).float().sum()
             # append average loss into result list
@@ -165,6 +169,11 @@ class Net(BaseNet):
             # Taking the meta gradient step (will update the learning rates)
             self.zero_grads()
 
+            # if (itr_main*self.glances + pass_itr) % 25 == 0:
+            #     outer_acc = self.eval_class_tasks(model, val_tasks, self.args, None)
+            #     outer_acc = sum(outer_acc)/len(outer_acc)
+            #     print('before metaupdate',outer_acc)
+
             meta_loss = sum(meta_losses)/len(meta_losses)            
             meta_loss.backward()
 
@@ -186,7 +195,7 @@ class Net(BaseNet):
 
             # calculate RA here every 25th time
             if (itr_main*self.glances + pass_itr) % 25 == 0:
-                outer_acc = self.eval_class_tasks(model, val_tasks, self.args, fast_weights)
+                outer_acc = self.eval_class_tasks(model, val_tasks, self.args, None)
                 outer_acc = sum(outer_acc)/len(outer_acc)
                 self.all_ras.append([outer_acc, inner_upd_ra])
                 print('ras', [outer_acc, inner_upd_ra])

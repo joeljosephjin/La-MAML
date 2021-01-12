@@ -23,7 +23,6 @@ from main_multi_task import life_experience_iid, eval_iid_tasks
 
 # returns list of avg loss of each task
 def eval_class_tasks(model, tasks, args):
-    # model.eval turns off dropouts, batchnorms. https://stackoverflow.com/questions/60018578/what-does-model-eval-do-in-pytorch
     model.eval()
     result = []
     # for {0,1,2..} and task_loader? from tasks
@@ -98,7 +97,9 @@ def life_experience(model, inc_loader, args):
             for (i, (x, y)) in enumerate(prog_bar):
 
                 if((i % args.log_every) == 0):
-                    result_val_a.append(evaluator(model, val_tasks, args))
+                    ev_acc=evaluator(model, val_tasks, args)
+                    result_val_a.append(ev_acc)
+                    # print("RA before meta-upd", sum(ev_acc)/len(ev_acc))
                     result_val_t.append(task_info["task"])
 
                 v_x = x
@@ -111,7 +112,7 @@ def life_experience(model, inc_loader, args):
 
                 model.train()
 
-                loss = model.observe(Variable(v_x), Variable(v_y), task_info["task"])
+                loss = model.observe(Variable(v_x), Variable(v_y), task_info["task"], val_tasks, model, i)
 
                 prog_bar.set_description(
                     "Task: {} | Epoch: {}/{} | Iter: {} | Loss: {} | Acc: Total: {} Current Task: {} ".format(
@@ -126,6 +127,10 @@ def life_experience(model, inc_loader, args):
         if args.calc_test_accuracy:
             result_test_a.append(evaluator(model, test_tasks, args))
             result_test_t.append(task_info["task"])
+        
+        if task_i==4:
+            print(model.all_ras)
+            break
 
 
     print("####Final Validation Accuracy####")

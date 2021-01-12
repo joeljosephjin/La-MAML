@@ -198,7 +198,7 @@ class Net(BaseNet):
                 outer_acc = self.eval_class_tasks(model, val_tasks, self.args, None)
                 outer_acc = sum(outer_acc)/len(outer_acc)
                 self.all_ras.append([outer_acc, inner_upd_ra])
-                print('ras', [outer_acc, inner_upd_ra])
+                # print('ras', [outer_acc, inner_upd_ra])
 
 
         return meta_loss.item()

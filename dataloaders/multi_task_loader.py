@@ -198,7 +198,7 @@ class IncrementalLoader:
 
                 x_train, y_train = train_dataset.data, np.array(train_dataset.targets)
                 x_val, y_val, x_train, y_train = self._list_split_per_class(
-                    x_train, y_train
+                    x_train, y_train, validation_split
                 )
                 x_test, y_test = test_dataset.data, np.array(test_dataset.targets)
 

@@ -129,15 +129,6 @@ def life_experience(model, inc_loader, args):
                  "Total Acc": round(sum(result_val_a[-1]).item()/len(result_val_a[-1]), 5),
                   "Curr Task Acc": round(result_val_a[-1][task_info["task"]].item(), 5)})
 
-                # prog_bar.set_description(
-                #     "Task: {} | Epoch: {}/{} | Iter: {} | Loss: {} | Acc: Total: {} Current Task: {} ".format(
-                #         task_info["task"], ep+1, args.n_epochs, i%(1000*args.n_epochs), round(loss, 3),
-                #         round(sum(result_val_a[-1]).item()/len(result_val_a[-1]), 5), round(result_val_a[-1][task_info["task"]].item(), 5)
-                #     )
-                # )
-
-        # torch.save(model.state_dict(), os.path.join(wandb.run.dir, 'model.pt'))
-
         result_val_a.append(evaluator(model, val_tasks, args))
         result_val_t.append(task_info["task"])
 

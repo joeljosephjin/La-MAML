@@ -187,6 +187,7 @@ class Net(nn.Module):
         x = x.view(x.size(0), -1)
         # update memory
         if t != self.current_task:
+            # when this encounters a new task, the task no. is appended into the list
             self.observed_tasks.append(t)
             self.current_task = t
             self.grad_align.append([])
@@ -211,9 +212,11 @@ class Net(nn.Module):
 
             # compute gradient on previous tasks
             if len(self.observed_tasks) > 1:
+                # for each past task
                 for tt in range(len(self.observed_tasks) - 1):
                     self.zero_grad()
                     # fwd/bwd on the examples in the memory
+                    # get the past task no.
                     past_task = self.observed_tasks[tt]
 
                     offset1, offset2 = compute_offsets(past_task, self.nc_per_task,

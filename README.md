@@ -2,7 +2,7 @@
 
 This repository is the unofficial implementation of the NeurIPS paper **Look-Ahead Meta-Learning for Continual Learning** for the reproducibility challenge 2020.
 
-<font size="+1">[Paper](https://arxiv.org/abs/2007.13904) | [Colab](https://colab.research.google.com/drive/1GU38LiMp3dUgjVZtWHtG7GIAU2q5EHKp) | [Runs](https://wandb.ai/joeljosephjin/rc2020)</font>
+<font size="+1">[Paper](https://arxiv.org/abs/2007.13904) | [Colab](https://colab.research.google.com/drive/1GU38LiMp3dUgjVZtWHtG7GIAU2q5EHKp) | [Runs](https://wandb.ai/joeljosephjin/rc2020) | [Official Repo](https://github.com/montrealrobotics/La-MAML)</font>
 
 <!-- ![La-MAML](images/lamaml.gif) -->
 

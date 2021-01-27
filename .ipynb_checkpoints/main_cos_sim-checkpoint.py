@@ -87,6 +87,8 @@ def life_experience(model, inc_loader, args):
     evaluator = eval_tasks
     if args.loader == "class_incremental_loader":
         evaluator = eval_class_tasks
+        
+    cos_sim_lists = []
 
     for task_i in range(inc_loader.n_tasks):
         task_info, train_loader, _, _ = inc_loader.new_task()
@@ -111,7 +113,11 @@ def life_experience(model, inc_loader, args):
 
                 model.train()
 
-                loss = model.observe(Variable(v_x), Variable(v_y), task_info["task"])
+                loss, cos_sim_list = model.observe(Variable(v_x), Variable(v_y), task_info["task"])
+                
+                if i==0:
+                    print('len:', len(cos_sim_list))
+                cos_sim_lists.extend(cos_sim_list)
 
                 prog_bar.set_description(
                     "Task: {} | Epoch: {}/{} | Iter: {} | Loss: {} | Acc: Total: {} Current Task: {} ".format(
@@ -126,6 +132,10 @@ def life_experience(model, inc_loader, args):
         if args.calc_test_accuracy:
             result_test_a.append(evaluator(model, test_tasks, args))
             result_test_t.append(task_info["task"])
+        
+        if task_i > 2:
+            print(cos_sim_lists)
+            break
 
 
     print("####Final Validation Accuracy####")
@@ -135,7 +145,8 @@ def life_experience(model, inc_loader, args):
         print("####Final Test Accuracy####")
         print("Final Results:- \n Total Accuracy: {} \n Individual Accuracy: {}".format(sum(result_test_a[-1])/len(result_test_a[-1]), result_test_a[-1]))
 
-
+    print(cos_sim_lists)
+    
     time_end = time.time()
     time_spent = time_end - time_start
     return torch.Tensor(result_val_t), torch.Tensor(result_val_a), torch.Tensor(result_test_t), torch.Tensor(result_test_a), time_spent

@@ -7,27 +7,6 @@ import torch.nn as nn
 from model.lamaml_base import *
 
 
-def store_grad(pp, grads, grad_dims, tid):
-    """
-        This stores parameter gradients of past tasks.
-        pp: parameters
-        grads: gradients
-        grad_dims: list with number of parameters per layers
-        tid: task id
-    """
-    # store the gradients
-    grads[:, tid].fill_(0.0)
-    cnt = 0
-    for param in pp():
-#         print('False' if param.grad is not None else 'True')
-        if param.grad is not None:
-            beg = 0 if cnt == 0 else sum(grad_dims[:cnt])
-            en = sum(grad_dims[:cnt + 1])
-            grads[beg: en, tid].copy_(param.grad.data.view(-1))
-        cnt += 1
-#     print(grads)
-
-
 class Net(BaseNet):
 
     def __init__(self,
@@ -40,15 +19,7 @@ class Net(BaseNet):
                                  n_tasks,           
                                  args)
         self.nc_per_task = n_outputs / n_tasks
-
-        self.grad_dims = []
-        for param in self.parameters():
-            self.grad_dims.append(param.data.numel())
-        self.grads = torch.Tensor(sum(self.grad_dims), n_tasks)
-        if args.cuda:
-            self.grads = self.grads.cuda()
-
-        self.observed_tasks = []
+        self.all_ras = []
         
 
     def take_loss(self, t, logits, y):
@@ -57,22 +28,6 @@ class Net(BaseNet):
         loss = self.loss(logits[:, offset1:offset2], y-offset1)
 
         return loss
-    
-    # calculates the gradient similarity
-    def get_grads(self, data):
-        x,y,t = data
-
-        fast_weights = self.net.parameters()
-
-        offset1, offset2 = self.compute_offsets(t[0])
-
-        logits = self.net.forward(x, None)[:, :offset2]
-
-        loss = self.take_loss(t[0], logits, y)
-
-        grads = torch.autograd.grad(loss, fast_weights)
-
-        return grads
 
     def take_multitask_loss(self, bt, t, logits, y):
         # compute loss on data from a multiple tasks
@@ -86,6 +41,33 @@ class Net(BaseNet):
             offset1, offset2 = self.compute_offsets(ti)
             loss += self.loss(logits[i, offset1:offset2].unsqueeze(0), y[i].unsqueeze(0)-offset1)
         return loss/len(bt)
+
+
+    # returns list of avg loss of each task
+    def eval_class_tasks(self, model, tasks, args, fast_weights):
+        model.eval()
+        result = []
+        # for {0,1,2..} and task_loader? from tasks
+        for t, task_loader in enumerate(tasks):
+            rt = 0
+            # for 
+            for x, y in task_loader:
+                # cuda-ize x if necessary
+                if args.cuda: x = x.cuda()
+
+                offset1, offset2 = self.compute_offsets(t)
+
+                # push x thru model and get p out
+                if not fast_weights:
+                    _, p = torch.max(model(x, t).data.cpu(), 1, keepdim=False)
+                    pass
+                else:
+                    _, p = torch.max(self.net.forward(x, fast_weights)[:, :offset2].data.cpu(), 1, keepdim=False)
+                # rt is the loss/error . its being compared with label y
+                rt += (p == y).float().sum()
+            # append average loss into result list
+            result.append(rt / len(task_loader.dataset))
+        return result
 
 
     def forward(self, x, t):
@@ -136,11 +118,11 @@ class Net(BaseNet):
         return fast_weights
 
 
-    def observe(self, x, y, t):
-        self.net.train()
-        
-        cos_sim_list = []
+    def observe(self, x, y, t, val_tasks, model, itr_main):
+        self.net.train() 
+
         for pass_itr in range(self.glances):
+
             self.pass_itr = pass_itr
             perm = torch.randperm(x.size(0))
             x = x[perm]
@@ -150,7 +132,6 @@ class Net(BaseNet):
             self.zero_grads()
 
             if t != self.current_task:
-                self.observed_tasks.append(t)
                 self.M = self.M_new.copy()
                 self.current_task = t
 
@@ -164,6 +145,7 @@ class Net(BaseNet):
             # computing meta-loss
             bx, by, bt = self.getBatch(x.cpu().numpy(), y.cpu().numpy(), t)             
 
+            inner_upd_ra = []
             for i in range(n_batches):
 
                 batch_x = x[i*rough_sz : (i+1)*rough_sz]
@@ -175,19 +157,28 @@ class Net(BaseNet):
                 # instead of pushing every epoch     
                 if(self.real_epoch == 0):
                     self.push_to_mem(batch_x, batch_y, torch.tensor(t))
-                meta_loss, logits = self.meta_loss(bx, fast_weights, by, bt, t) 
+                meta_loss, logits = self.meta_loss(bx, fast_weights, by, bt, t)
+
+                # calc RA here if pass_itr is multiple of 25
+                if (itr_main*self.glances + pass_itr) % 25 == 0:
+                    inner_eval_acc = self.eval_class_tasks(model, val_tasks, self.args, fast_weights)
+                    inner_upd_ra.append(sum(inner_eval_acc)/len(inner_eval_acc))
                 
                 meta_losses[i] += meta_loss
 
             # Taking the meta gradient step (will update the learning rates)
             self.zero_grads()
 
+            # if (itr_main*self.glances + pass_itr) % 25 == 0:
+            #     outer_acc = self.eval_class_tasks(model, val_tasks, self.args, None)
+            #     outer_acc = sum(outer_acc)/len(outer_acc)
+            #     print('before metaupdate',outer_acc)
+
             meta_loss = sum(meta_losses)/len(meta_losses)            
             meta_loss.backward()
 
             torch.nn.utils.clip_grad_norm_(self.net.alpha_lr.parameters(), self.args.grad_clip_norm)
             torch.nn.utils.clip_grad_norm_(self.net.parameters(), self.args.grad_clip_norm)
-
             if self.args.learn_lr:
                 self.opt_lr.step()
 
@@ -201,27 +192,14 @@ class Net(BaseNet):
                     p.data = p.data - p.grad * nn.functional.relu(self.net.alpha_lr[i])            
             self.net.zero_grad()
             self.net.alpha_lr.zero_grad()
-            
-            # print the cos_sim                                                           
-            if len(self.observed_tasks) > 0:
-                # copy gradient
-                first_sample = bx[:2], by[:2], bt[:2]
-                second_sample = bx[-2:], by[-2:], bt[-2:]
-                
-                grad1 = self.get_grads(first_sample)
-                grad2 = self.get_grads(second_sample)
-                
-#                 print('shape:', len(grad1), len(grad2))
-                
-                cos_sim = torch.nn.functional.cosine_similarity(grad1[0], grad2[0]).flatten()
-#                 print('sub shapes', grad1[0].shape, grad1[1].shape, grad1[2].shape, grad1[2].shape)
-#                 print('sub shapes2', grad2[0].shape, grad2[1].shape, grad2[2].shape, grad2[2].shape)
-#                 cos_sim1 = torch.nn.functional.cosine_similarity(grad1[2], grad2[2]).flatten()
-                
-                cos_sim = sum(cos_sim)/len(cos_sim)
-                print('cos_sim:', cos_sim.item())
-                cos_sim_list.append(cos_sim.item())
-#                 print('cos_sim1:', sum(cos_sim1)/len(cos_sim1))
-        
-        return meta_loss.item(), cos_sim_list
+
+            # calculate RA here every 25th time
+            if (itr_main*self.glances + pass_itr) % 25 == 0:
+                outer_acc = self.eval_class_tasks(model, val_tasks, self.args, None)
+                outer_acc = sum(outer_acc)/len(outer_acc)
+                self.all_ras.append([outer_acc, inner_upd_ra])
+                # print('ras', [outer_acc, inner_upd_ra])
+
+
+        return meta_loss.item()
 

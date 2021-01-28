@@ -76,7 +76,7 @@ def eval_tasks(model, tasks, args):
 
 # for lamaml and everything except iid
 def life_experience(model, inc_loader, args):
-    wandb.init(project="rc2020", entity="joeljosephjin")
+    wandb.init(project="rc2020", entity="joeljosephjin", config=vars(args))
 
     result_val_a = []
     result_test_a = []
